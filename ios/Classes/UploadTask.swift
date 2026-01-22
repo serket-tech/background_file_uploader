@@ -5,6 +5,7 @@ struct UploadTaskData: Codable {
     let filePath: String
     let url: String
     let method: String
+    let useMultipart: Bool
     let headers: [String: String]
     let fields: [String: String]
     let fileFieldName: String
@@ -17,6 +18,7 @@ struct UploadTaskData: Codable {
         self.filePath = dict["filePath"] as? String ?? ""
         self.url = dict["url"] as? String ?? ""
         self.method = dict["method"] as? String ?? "POST"
+        self.useMultipart = dict["useMultipart"] as? Bool ?? true
         self.headers = dict["headers"] as? [String: String] ?? [:]
         self.fields = dict["fields"] as? [String: String] ?? [:]
         self.fileFieldName = dict["fileFieldName"] as? String ?? "file"
@@ -31,6 +33,7 @@ struct UploadTaskData: Codable {
             "filePath": filePath,
             "url": url,
             "method": method,
+            "useMultipart": useMultipart,
             "headers": headers,
             "fields": fields,
             "fileFieldName": fileFieldName,

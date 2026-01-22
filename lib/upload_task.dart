@@ -82,6 +82,9 @@ class UploadTask {
   /// HTTP method (default: POST)
   final String method;
 
+  /// HTTP method (default: POST)
+  final bool useMultipart;
+
   /// HTTP headers to include in the request
   final Map<String, String> headers;
 
@@ -105,6 +108,7 @@ class UploadTask {
     required this.filePath,
     required this.url,
     this.method = 'POST',
+    this.useMultipart = true,
     this.headers = const {},
     this.fields = const {},
     this.fileFieldName = 'file',
@@ -119,6 +123,7 @@ class UploadTask {
       'filePath': filePath,
       'url': url,
       'method': method,
+      'useMultipart': useMultipart,
       'headers': headers,
       'fields': fields,
       'fileFieldName': fileFieldName,
@@ -134,6 +139,7 @@ class UploadTask {
       filePath: map['filePath'] as String,
       url: map['url'] as String,
       method: map['method'] as String? ?? 'POST',
+      useMultipart: map['useMultipart'] as bool? ?? true,
       headers: Map<String, String>.from(map['headers'] as Map? ?? {}),
       fields: Map<String, String>.from(map['fields'] as Map? ?? {}),
       fileFieldName: map['fileFieldName'] as String? ?? 'file',

@@ -34,18 +34,26 @@ class UploadManager: NSObject {
             throw NSError(domain: "UploadManager", code: 404, userInfo: [NSLocalizedDescriptionKey: "File not found"])
         }
         
-        // Create multipart form data
-        let boundary = "Boundary-\(UUID().uuidString)"
-        let multipartData = createMultipartBody(fileURL: fileURL, taskData: taskData, boundary: boundary)
-        
-        // Save multipart data to temp file
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try multipartData.write(to: tempURL)
-        
-        // Create request
-        var request = URLRequest(url: URL(string: taskData.url)!)
-        request.httpMethod = taskData.method
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var request: URLRequest
+        var uploadSource: URL
+
+        if taskData.useMultipart {
+            let boundary = "Boundary-\(UUID().uuidString)"
+            let multipartData = createMultipartBody(fileURL: fileURL, taskData: taskData, boundary: boundary)
+
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+            try multipartData.write(to: tempURL)
+
+            request = URLRequest(url: URL(string: taskData.url)!)
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+            uploadSource = tempURL
+        } else {
+            request = URLRequest(url: URL(string: taskData.url)!)
+            request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+            uploadSource = fileURL
+        }
+
+        request.httpMethod = taskData.method.uppercased()
         
         // Add custom headers
         for (key, value) in taskData.headers {
@@ -53,7 +61,7 @@ class UploadManager: NSObject {
         }
         
         // Create upload task
-        let uploadTask = session.uploadTask(with: request, fromFile: tempURL)
+        let uploadTask = session.uploadTask(with: request, fromFile: uploadSource)
         
         // Store task data
         activeTasks[taskData.uploadId] = uploadTask
@@ -215,7 +223,8 @@ extension UploadManager: URLSessionDelegate, URLSessionTaskDelegate, URLSessionD
             }
         } else if let httpResponse = task.response as? HTTPURLResponse {
             // Log success
-            NSLog("[UploadWorker] Upload Completed - ID: %@, Status Code: %ld, URL: %@", uploadId, (long)httpResponse.statusCode, httpResponse.url?.absoluteString ?? "unknown")
+            let urlString = httpResponse.url?.absoluteString ?? "unknown"
+            NSLog("[UploadWorker] Upload Completed - ID: \(uploadId), Status Code: \(httpResponse.statusCode), URL: \(urlString)")
             
             // Upload completed
             let isSuccess = (200...299).contains(httpResponse.statusCode)
