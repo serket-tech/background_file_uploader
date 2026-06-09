@@ -1,3 +1,6 @@
+## 0.1.4
+* Add Swift Package Manager (SPM) support
+
 ## 0.1.3
 
 * Fixed Swift compiler error in NSLog format specifier for iOS
